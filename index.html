@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>學習系統</title>
+<meta name="theme-color" content="#16120e">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/app-icon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/app-icon-192.png">
+<link rel="apple-touch-icon" href="icons/app-icon-180.png">
+<style>
+  html,body{margin:0;height:100%;background:#16120e;overflow:hidden}
+  #app{position:fixed;inset:0;width:100%;height:100%;border:0;background:#16120e}
+  #ld{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+      color:#a8998a;font:15px "Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;transition:opacity .3s}
+  #ld img{width:88px;height:88px;animation:b 1.4s ease-in-out infinite}
+  #ld.off{opacity:0;pointer-events:none}
+  @keyframes b{50%{transform:translateY(-6px)}}
+</style>
+</head>
+<body>
+<div id="ld"><img src="icons/app-icon-192.png" alt=""><span id="msg">載入中…</span></div>
+<iframe id="app" title="學習系統" allow="clipboard-read; clipboard-write; fullscreen; autoplay"></iframe>
+<script>
+/* 學習系統的 Google 雲端版網址（重新部署「新版本」時網址不會變） */
+var APP_URL = 'https://script.google.com/macros/s/AKfycbwIK8STOV78IbK6nCJSvSbLNL38ngc5KNPG16dS-f6Lmn0u8WbSRS6nEHTUcRSAd6hFJw/exec';
+var DEP_ID = 'AKfycbwIK8STOV78IbK6nCJSvSbLNL38ngc5KNPG16dS-f6Lmn0u8WbSRS6nEHTUcRSAd6hFJw';
+var frame = document.getElementById('app'), ld = document.getElementById('ld');
+
+function withShell(u) {
+  var h = u.split('#'), base = h[0];
+  base += (base.indexOf('?') < 0 ? '?' : '&') + 'shell=1';
+  return base + (h[1] ? '#' + h[1] : '');
+}
+function isOurs(u) {
+  return typeof u === 'string' && u.indexOf('https://script.google.com/') === 0 && u.indexOf('/macros/s/' + DEP_ID + '/exec') > 0;
+}
+function go(u) { ld.classList.remove('off'); frame.src = withShell(u); }
+
+/* 外殼網址的參數（例如 ?p=en）原樣交給雲端版 */
+go(APP_URL + location.search.replace(/[?&]shell=1/, '').replace(/^&/, '?') + location.hash);
+frame.addEventListener('load', function () { ld.classList.add('off'); });
+setTimeout(function () { document.getElementById('msg').textContent = '連線比較慢，請稍候…'; }, 8000);
+
+/* 雲端版裡的換頁（首頁卡片、回首頁）由外殼切換，視窗不會跳出去 */
+window.addEventListener('message', function (e) {
+  var d = e.data;
+  if (d && isOurs(d.lsNav)) go(d.lsNav);
+});
+
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function () {});
+</script>
+</body>
+</html>
